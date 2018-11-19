@@ -92,14 +92,16 @@ public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, 
     }
 
     private void registerTopicBean(String topicName, String topicSuffix, BeanDefinitionRegistry registry) {
+        String beanName = topicName;
         final BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(TopicBeanFactory.class);
         builder.addPropertyValue("topicName", topicName);
         if (topicSuffix != null) {
             builder.addPropertyValue("topicSuffix", topicSuffix);
+            beanName = beanName + topicSuffix;
         }
 
         final BeanDefinition definition = builder.getBeanDefinition();
-        registry.registerBeanDefinition(topicName, definition);
+        registry.registerBeanDefinition(beanName, definition);
     }
 
     private Class<?> getClassForBean(AnnotatedBeanDefinition beanDefinition) {

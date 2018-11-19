@@ -1,20 +1,18 @@
 package net.consensys.kafkadl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 
 import net.consensys.kafkadl.internal.DeadLetterTopicNameConvention;
 import net.consensys.kafkadl.internal.util.JSON;
 import net.consensys.kafkadl.message.DummyDetails;
 import net.consensys.kafkadl.message.DummyMessage;
-import net.consensys.kafkadl.message.RetryableMessage;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -25,7 +23,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
