@@ -74,7 +74,7 @@ public class KafkaDeadLetterConfiguration {
     }
 
     @Bean
-    public RetryTemplate retryTemplate() {
+    public RetryTemplate deadLetterRetryTemplate() {
         final KafkaProperties properties = kafkaProperties();
 
         final RetryTemplate retryTemplate = new RetryTemplate();
@@ -150,7 +150,7 @@ public class KafkaDeadLetterConfiguration {
             KafkaTemplate<?, ?> kafkaTemplate, DeadLetterSettings deadLetterSettings) {
         final KafkaListenerContainerFactoryPostProcessor postProcessor = new KafkaListenerContainerFactoryPostProcessor();
 
-        postProcessor.setRetryTemplate(retryTemplate());
+        postProcessor.setRetryTemplate(deadLetterRetryTemplate());
         postProcessor.setRecoveryCallback(recoveryCallback(kafkaTemplate));
         postProcessor.setSettings(settings);
 
