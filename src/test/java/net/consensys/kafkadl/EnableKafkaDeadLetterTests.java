@@ -51,7 +51,7 @@ public class EnableKafkaDeadLetterTests {
     private static final BigInteger BIG_INT_VALUE = BigInteger.TEN;
 
     @ClassRule
-    public static KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, 1, "testTopic");
+    public static KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, 3, "testTopic");
 
     @LocalServerPort
     private int port = 12345;
