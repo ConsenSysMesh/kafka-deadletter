@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = DummyMessage.class, name = DummyMessage.TYPE),
+        @JsonSubTypes.Type(value = DummyMessageNoInterface.class, name = DummyMessageNoInterface.TYPE),
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface MessageMixin {

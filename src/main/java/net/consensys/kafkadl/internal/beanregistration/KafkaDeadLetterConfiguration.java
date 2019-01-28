@@ -10,7 +10,6 @@ import net.consensys.kafkadl.internal.failure.SendToErrorTopicErrorHandler;
 import net.consensys.kafkadl.internal.failure.SendToErrorTopicRetriesExhaustedHandler;
 import net.consensys.kafkadl.internal.forwarder.ErrorTopicForwarder;
 import net.consensys.kafkadl.internal.integration.DeadLetterTopicConsumer;
-import net.consensys.kafkadl.message.RetryableMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

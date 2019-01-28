@@ -6,6 +6,8 @@ import net.consensys.kafkadl.internal.DeadLetterTopicNameConvention;
 import net.consensys.kafkadl.internal.util.JSON;
 import net.consensys.kafkadl.message.DummyDetails;
 import net.consensys.kafkadl.message.DummyMessage;
+import net.consensys.kafkadl.message.DummyMessageNoInterface;
+import net.consensys.kafkadl.message.TestMessage;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -63,9 +65,9 @@ public class EnableKafkaDeadLetterTests {
     @Autowired
     private DeadLetterTopicNameConvention dltNameConvention;
 
-    private List<DummyMessage> receivedMessagesOnMainTopic;
+    private List<TestMessage> receivedMessagesOnMainTopic;
 
-    private List<DummyMessage> receivedMessagesOnErrorTopic;
+    private List<TestMessage> receivedMessagesOnErrorTopic;
 
     private ErrorCriteria errorCriteria;
 
@@ -118,6 +120,27 @@ public class EnableKafkaDeadLetterTests {
     }
 
     @Test
+    public void testNonInterfaceImplementingMessageFailureWithNoRecovery() {
+        configureErrorCriteria(true, null);
+        final int expectedMessageCount =
+                DEFAULT_INTERNAL_RETRIES * DEFAULT_DEADLETTER_RETRIES + DEFAULT_INTERNAL_RETRIES;
+
+        final DummyDetails details = new DummyDetails();
+        details.setStringValue(STRING_VALUE);
+        details.setBigIntegerValue(BIG_INT_VALUE);
+
+        final DummyMessageNoInterface message = new DummyMessageNoInterface();
+        message.setDetails(details);
+
+        sendMessage(message);
+        waitForMessages(expectedMessageCount, 1);
+
+        assertEquals(expectedMessageCount, receivedMessagesOnMainTopic.size());
+        assertEquals(1, receivedMessagesOnErrorTopic.size());
+        assertEquals(message.getDetails(), receivedMessagesOnErrorTopic.get(0).getDetails());
+    }
+
+    @Test
     public void testDltNameConventionDLTSuffixContainsServiceId() {
         assertTrue(dltNameConvention.getDeadLetterTopicSuffix().contains("TestApplication"));
     }
@@ -138,9 +161,13 @@ public class EnableKafkaDeadLetterTests {
     private DummyMessage sendMessage() {
         final DummyMessage message = createDummyMessage();
 
-        kafkaTemplate.send("testTopic", message);
+        sendMessage(message);
 
         return message;
+    }
+
+    private void sendMessage(Object message) {
+        kafkaTemplate.send("testTopic", message);
     }
 
     private DummyMessage sendMessageAndWait(int expectedMessagesOnMainTopic,
@@ -152,7 +179,7 @@ public class EnableKafkaDeadLetterTests {
     }
 
     @KafkaListener(topics = "testTopic", groupId = "testGroup")
-    public void consumer(DummyMessage message) {
+    public void consumer(TestMessage message) {
         System.out.println(String.format("Message received: %s", JSON.stringify(message)));
         receivedMessagesOnMainTopic.add(message);
 
@@ -165,7 +192,7 @@ public class EnableKafkaDeadLetterTests {
 
     @KafkaListener(topics = "#{deadLetterTopicNameConvention.getErrorTopicName('testTopic')}",
             groupId = "testGroup")
-    public void errorConsumer(DummyMessage message) {
+    public void errorConsumer(TestMessage message) {
         System.out.println(String.format("Message received on error topic: %s", JSON.stringify(message)));
         receivedMessagesOnErrorTopic.add(message);
     }
@@ -233,7 +260,7 @@ public class EnableKafkaDeadLetterTests {
         assertEquals(getExpectedMessageCountOnRetryRecovery(retryNumberForRecovery), receivedMessagesOnMainTopic.size());
 
         for(int i = 0; i < receivedMessagesOnMainTopic.size(); i++) {
-            final DummyMessage message = receivedMessagesOnMainTopic.get(i);
+            final TestMessage message = receivedMessagesOnMainTopic.get(i);
             assertEquals(id, message.getId());
 
             final Integer expectedRetryNumber = i / (DEFAULT_INTERNAL_RETRIES);
