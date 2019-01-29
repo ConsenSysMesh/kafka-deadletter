@@ -1,4 +1,4 @@
-package net.consensys.kafkadl;
+package net.consensys.kafkadl.annotation;
 
 import net.consensys.kafkadl.internal.beanregistration.KafkaDeadLetterConfiguration;
 import net.consensys.kafkadl.internal.beanregistration.KafkaDeadLetterRegistrar;
