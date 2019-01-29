@@ -1,8 +1,7 @@
 package net.consensys.kafkadl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-import net.consensys.kafkadl.message.DummyMessage;
+import net.consensys.kafkadl.annotation.EnableKafkaDeadLetter;
+import net.consensys.kafkadl.message.TestMessage;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -36,7 +35,7 @@ public class TestConfiguration {
     }
 
     @Bean
-    public ConsumerFactory<String, DummyMessage> consumerFactory() {
+    public ConsumerFactory<String, TestMessage> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddresses);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "group");
@@ -44,11 +43,11 @@ public class TestConfiguration {
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
         return new DefaultKafkaConsumerFactory<>(props,
-                null, new JsonDeserializer<>(DummyMessage.class));
+                null, new JsonDeserializer<>(TestMessage.class));
     }
 
     @Bean
-    public ProducerFactory<String, DummyMessage> producerFactory() {
+    public ProducerFactory<String, TestMessage> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddresses);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -57,14 +56,14 @@ public class TestConfiguration {
     }
 
     @Bean
-    public KafkaTemplate<String, DummyMessage> kafkaTemplate() {
+    public KafkaTemplate<String, TestMessage> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, DummyMessage> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, TestMessage> kafkaListenerContainerFactory() {
 
-        ConcurrentKafkaListenerContainerFactory<String, DummyMessage> factory
+        ConcurrentKafkaListenerContainerFactory<String, TestMessage> factory
                 = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(1);

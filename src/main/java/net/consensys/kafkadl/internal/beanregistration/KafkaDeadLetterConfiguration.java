@@ -90,11 +90,13 @@ public class KafkaDeadLetterConfiguration {
     }
 
     @Bean
-    public RecoveryCallback recoveryCallback(KafkaTemplate<?, ?> kafkaTemplate) {
+    public RecoveryCallback recoveryCallback(KafkaTemplate<?, ?> kafkaTemplate,
+                                             DeadLetterSettings deadLetterSettings) {
         return new DeadLetterRecoveryCallback(kafkaTemplate,
                 deadLetterTopicNameConvention(),
                 retriesExhaustedHandler(kafkaTemplate),
-                kafkaProperties());
+                kafkaProperties(),
+                deadLetterSettings);
     }
 
     @Bean
@@ -150,7 +152,7 @@ public class KafkaDeadLetterConfiguration {
         final KafkaListenerContainerFactoryPostProcessor postProcessor = new KafkaListenerContainerFactoryPostProcessor();
 
         postProcessor.setRetryTemplate(deadLetterRetryTemplate());
-        postProcessor.setRecoveryCallback(recoveryCallback(kafkaTemplate));
+        postProcessor.setRecoveryCallback(recoveryCallback(kafkaTemplate, deadLetterSettings));
         postProcessor.setSettings(settings);
 
         return postProcessor;
