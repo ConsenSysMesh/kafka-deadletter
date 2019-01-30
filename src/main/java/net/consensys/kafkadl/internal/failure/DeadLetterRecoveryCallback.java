@@ -2,13 +2,15 @@ package net.consensys.kafkadl.internal.failure;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.consensys.kafkadl.annotation.DeadLetterMessage;
+import net.consensys.kafkadl.handler.DeadLetterRetriesExhaustedHandler;
 import net.consensys.kafkadl.internal.DeadLetterSettings;
 import net.consensys.kafkadl.internal.DeadLetterTopicNameConvention;
 import net.consensys.kafkadl.internal.KafkaProperties;
+import net.consensys.kafkadl.internal.forwarder.ErrorTopicForwarder;
 import net.consensys.kafkadl.internal.util.JSON;
 import net.consensys.kafkadl.message.ReflectionRetryableMessage;
 import net.consensys.kafkadl.message.RetryableMessage;
+import net.consensys.kafkadl.util.AnnotationUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.retry.RecoveryCallback;
 import org.springframework.retry.RetryContext;
 
+import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -27,7 +30,8 @@ public class DeadLetterRecoveryCallback implements RecoveryCallback {
 
     private KafkaTemplate kafkaTemplate;
     private DeadLetterTopicNameConvention deadLetterConvention;
-    private DeadLetterRetriesExhaustedHandler retriesExhaustedHandler;
+    private List<DeadLetterRetriesExhaustedHandler> retriesExhaustedHandlers;
+    private ErrorTopicForwarder errorTopicForwarder;
     private KafkaProperties kafkaProperties;
     private DeadLetterSettings deadLetterSettings;
 
@@ -36,15 +40,19 @@ public class DeadLetterRecoveryCallback implements RecoveryCallback {
         final ConsumerRecord record = (ConsumerRecord) context.getAttribute("record");
 
         if (deadLetterSettings.isAnnotatedMessages()
-                && !isDeadLetterMessageAnnotated(record.value())) {
+                && !AnnotationUtils.isDeadLetterMessageAnnotated(record.value())) {
             log.debug("Message is not @DeadLetterMessage annotated, ignoring");
+            executeRetriesExhaustedHandlers(context);
             return null;
         }
 
         getRetryableMessage(record).ifPresent(message -> {
             if (hasExhaustedRetries(message)) {
                 LOG.error(String.format("Retries exhausted for message: %s", JSON.stringify(message)));
-                retriesExhaustedHandler.onFailure(record);
+
+                executeRetriesExhaustedHandlers(context);
+
+                errorTopicForwarder.forward(record);
             } else {
 
                 final String key = record.key() != null ? record.key().toString() : null;
@@ -57,10 +65,6 @@ public class DeadLetterRecoveryCallback implements RecoveryCallback {
         });
 
         return null;
-    }
-
-    private boolean isDeadLetterMessageAnnotated(Object message) {
-        return message.getClass().isAnnotationPresent(DeadLetterMessage.class);
     }
 
     private Optional<RetryableMessage> getRetryableMessage(ConsumerRecord record) {
@@ -83,5 +87,9 @@ public class DeadLetterRecoveryCallback implements RecoveryCallback {
 
     private int getMaxRetries() {
         return kafkaProperties.getDeadLetterTopicRetries();
+    }
+
+    private void executeRetriesExhaustedHandlers(RetryContext context) {
+        retriesExhaustedHandlers.forEach(handler -> handler.onFailure(context));
     }
 }

@@ -5,9 +5,8 @@ import net.consensys.kafkadl.internal.DeadLetterSettings;
 import net.consensys.kafkadl.internal.DeadLetterTopicNameConvention;
 import net.consensys.kafkadl.internal.KafkaProperties;
 import net.consensys.kafkadl.internal.failure.DeadLetterRecoveryCallback;
-import net.consensys.kafkadl.internal.failure.DeadLetterRetriesExhaustedHandler;
+import net.consensys.kafkadl.handler.DeadLetterRetriesExhaustedHandler;
 import net.consensys.kafkadl.internal.failure.SendToErrorTopicErrorHandler;
-import net.consensys.kafkadl.internal.failure.SendToErrorTopicRetriesExhaustedHandler;
 import net.consensys.kafkadl.internal.forwarder.ErrorTopicForwarder;
 import net.consensys.kafkadl.internal.integration.DeadLetterTopicConsumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,6 +29,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -91,17 +91,16 @@ public class KafkaDeadLetterConfiguration {
 
     @Bean
     public RecoveryCallback recoveryCallback(KafkaTemplate<?, ?> kafkaTemplate,
-                                             DeadLetterSettings deadLetterSettings) {
+                                             DeadLetterSettings deadLetterSettings,
+                                             List<DeadLetterRetriesExhaustedHandler> retriesExhaustedHandlers,
+                                             ErrorTopicForwarder errorTopicForwarder) {
+
         return new DeadLetterRecoveryCallback(kafkaTemplate,
                 deadLetterTopicNameConvention(),
-                retriesExhaustedHandler(kafkaTemplate),
+                retriesExhaustedHandlers,
+                errorTopicForwarder,
                 kafkaProperties(),
                 deadLetterSettings);
-    }
-
-    @Bean
-    public DeadLetterRetriesExhaustedHandler retriesExhaustedHandler(KafkaTemplate<?, ?> kafkaTemplate) {
-        return new SendToErrorTopicRetriesExhaustedHandler(errorTopicForwarder(kafkaTemplate));
     }
 
     @Bean
@@ -147,12 +146,11 @@ public class KafkaDeadLetterConfiguration {
     }
 
     @Bean
-    public BeanPostProcessor containerFactoryPostProcessor(
-            KafkaTemplate<?, ?> kafkaTemplate, DeadLetterSettings deadLetterSettings) {
+    public BeanPostProcessor containerFactoryPostProcessor(RecoveryCallback recoveryCallback) {
         final KafkaListenerContainerFactoryPostProcessor postProcessor = new KafkaListenerContainerFactoryPostProcessor();
 
         postProcessor.setRetryTemplate(deadLetterRetryTemplate());
-        postProcessor.setRecoveryCallback(recoveryCallback(kafkaTemplate, deadLetterSettings));
+        postProcessor.setRecoveryCallback(recoveryCallback);
         postProcessor.setSettings(settings);
 
         return postProcessor;

@@ -1,6 +1,7 @@
 package net.consensys.kafkadl;
 
 import net.consensys.kafkadl.annotation.EnableKafkaDeadLetter;
+import net.consensys.kafkadl.handler.DeadLetterRetriesExhaustedHandler;
 import net.consensys.kafkadl.message.TestMessage;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -68,5 +69,10 @@ public class TestConfiguration {
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(1);
         return factory;
+    }
+
+    @Bean
+    public DeadLetterRetriesExhaustedHandler customRetriesExhaustedHandler() {
+        return new DummyRetriesExhaustedHandler();
     }
 }

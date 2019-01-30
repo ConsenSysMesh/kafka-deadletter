@@ -53,6 +53,9 @@ public class BaseKafkaDeadLetterTests {
     @Autowired
     protected DeadLetterTopicNameConvention dltNameConvention;
 
+    @Autowired
+    protected DummyRetriesExhaustedHandler retriesExhaustedHandler;
+
     protected List<TestMessage> receivedMessagesOnMainTopic;
 
     protected List<TestMessage> receivedMessagesOnErrorTopic;
@@ -63,6 +66,7 @@ public class BaseKafkaDeadLetterTests {
     public void init() throws Exception {
         receivedMessagesOnMainTopic = new ArrayList<>();
         receivedMessagesOnErrorTopic = new ArrayList<>();
+        retriesExhaustedHandler.getFailedRecords().clear();
 
         final MessageListenerContainer container = registry.getListenerContainer(KAFKA_LISTENER_CONTAINER_ID);
 

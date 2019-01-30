@@ -48,14 +48,7 @@ public class EnableKafkaDeadLetterTests extends BaseKafkaDeadLetterTests {
 
     @Test
     public void testMessageFailureWithNoRecovery() {
-        configureErrorCriteria(true, null);
-        final int expectedMessageCount =
-                DEFAULT_INTERNAL_RETRIES * DEFAULT_DEADLETTER_RETRIES + DEFAULT_INTERNAL_RETRIES;
-        final DummyMessage message = sendMessageAndWait(expectedMessageCount, 1);
-
-        assertEquals(expectedMessageCount, receivedMessagesOnMainTopic.size());
-        assertEquals(1, receivedMessagesOnErrorTopic.size());
-        assertEquals(message.getId(), receivedMessagesOnErrorTopic.get(0).getId());
+        doFailureWithNoRecoveryTest();
     }
 
     @Test
@@ -89,5 +82,26 @@ public class EnableKafkaDeadLetterTests extends BaseKafkaDeadLetterTests {
         assertTrue(dltNameConvention.getErrorTopicSuffix().contains("TestApplication"));
     }
 
+    @Test
+    public void testMessageFailureTriggersRetriesExhaustedHandler() {
+        final DummyMessage message = doFailureWithNoRecoveryTest();
+
+        message.setRetries(3);
+        assertEquals(1, retriesExhaustedHandler.getFailedRecords().size());
+        assertEquals(message, retriesExhaustedHandler.getFailedRecords().get(0).value());
+    }
+
+    private DummyMessage doFailureWithNoRecoveryTest() {
+        configureErrorCriteria(true, null);
+        final int expectedMessageCount =
+                DEFAULT_INTERNAL_RETRIES * DEFAULT_DEADLETTER_RETRIES + DEFAULT_INTERNAL_RETRIES;
+        final DummyMessage message = sendMessageAndWait(expectedMessageCount, 1);
+
+        assertEquals(expectedMessageCount, receivedMessagesOnMainTopic.size());
+        assertEquals(1, receivedMessagesOnErrorTopic.size());
+        assertEquals(message.getId(), receivedMessagesOnErrorTopic.get(0).getId());
+
+        return message;
+    }
 
 }
