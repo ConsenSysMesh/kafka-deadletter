@@ -20,6 +20,12 @@ public abstract class BatchContinueOnFailureConsumer<K, V> {
     private ErrorHandler errorHandler;
 
     public void onMessages(List<ConsumerRecord<K, V>> data) {
+        try {
+            Thread.sleep(kafkaProperties.getDeadLetterTopicPollDelay());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         data.forEach((record) -> {
             try {
                 onMessage(record);
@@ -30,12 +36,6 @@ public abstract class BatchContinueOnFailureConsumer<K, V> {
                 errorHandler.handle(e, record);
             }
         });
-
-        try {
-            Thread.sleep(kafkaProperties.getDeadLetterTopicPollDelay());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     abstract void onMessage(ConsumerRecord<K, V> consumerRecord);

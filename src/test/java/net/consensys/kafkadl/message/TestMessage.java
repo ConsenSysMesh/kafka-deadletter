@@ -11,7 +11,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = DummyMessage.class, name = DummyMessage.TYPE),
+        @JsonSubTypes.Type(value = DummyMessageNoInterface.class, name = DummyMessageNoInterface.TYPE),
+        @JsonSubTypes.Type(value = AnnotatedDummyMessage.class, name = AnnotatedDummyMessage.TYPE)
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public interface MessageMixin {
+public interface TestMessage {
+    String getId();
+    String getType();
+    DummyDetails getDetails();
+    Integer getRetries();
 }

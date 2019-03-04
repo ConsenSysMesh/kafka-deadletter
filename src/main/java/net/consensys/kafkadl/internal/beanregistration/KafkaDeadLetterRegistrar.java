@@ -1,6 +1,6 @@
 package net.consensys.kafkadl.internal.beanregistration;
 
-import net.consensys.kafkadl.EnableKafkaDeadLetter;
+import net.consensys.kafkadl.annotation.EnableKafkaDeadLetter;
 import net.consensys.kafkadl.internal.DeadLetterSettings;
 import net.consensys.kafkadl.internal.DeadLetterTopicNameConvention;
 import net.consensys.kafkadl.internal.beanregistration.exception.ServiceIdNotConsistentException;
@@ -9,21 +9,23 @@ import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.ClassUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, BeanClassLoaderAware {
+public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, BeanClassLoaderAware, EnvironmentAware {
 
     public static final String DEAD_LETTER_SETTINGS_BEAN_NAME = "deadLetterSettings";
 
     private ClassLoader beanClassloader;
+
+    private Environment environment;
 
     private String serviceId;
 
@@ -59,6 +61,11 @@ public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, 
         }
     }
 
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
+
     private void registerDeadLetterBeans(
             Set<String> topics, Set<String> containerFactoryBeans, BeanDefinitionRegistry registry) {
         registerDeadLetterSettings(topics, containerFactoryBeans, registry);
@@ -77,6 +84,7 @@ public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, 
         builder.addPropertyValue("deadLetterEnabledTopics", topics);
         builder.addPropertyValue("serviceId", serviceId);
         builder.addPropertyValue("deadLetterEnabledContainerFactoryBeans", containerFactoryBeans);
+        builder.addPropertyValue("environment", environment);
 
         registry.registerBeanDefinition(DEAD_LETTER_SETTINGS_BEAN_NAME, builder.getBeanDefinition());
     }

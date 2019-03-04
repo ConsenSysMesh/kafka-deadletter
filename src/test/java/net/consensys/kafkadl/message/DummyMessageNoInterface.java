@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DummyMessage implements RetryableMessage, TestMessage {
+public class DummyMessageNoInterface implements TestMessage {
 
-    public static final String TYPE = "DUMMY";
+    public static final String TYPE = "DUMMY_NO_INTERFACE";
+
+    private String type = TYPE;
 
     private String id;
-    private String type = TYPE;
-    private DummyDetails details;
     private Integer retries = 0;
+    private DummyDetails details;
 }
