@@ -1,6 +1,7 @@
 package net.consensys.kafkadl.internal.beanregistration;
 
 import lombok.Data;
+import net.consensys.kafkadl.internal.KafkaProperties;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -11,12 +12,15 @@ public class TopicBeanFactory implements FactoryBean<NewTopic> {
 
     private String topicSuffix;
 
+    private KafkaProperties kafkaProperties;
+
     public TopicBeanFactory() {
     }
 
     @Override
     public NewTopic getObject() throws Exception {
-        return new NewTopic(getFullTopicName(), 3, Short.parseShort("1"));
+        return new NewTopic(getFullTopicName(),
+                kafkaProperties.getNumTopicPartitions(), kafkaProperties.getTopicReplicationFactor());
     }
 
     @Override

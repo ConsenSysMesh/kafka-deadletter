@@ -103,6 +103,7 @@ public class KafkaDeadLetterRegistrar implements ImportBeanDefinitionRegistrar, 
         String beanName = topicName;
         final BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(TopicBeanFactory.class);
         builder.addPropertyValue("topicName", topicName);
+        builder.addPropertyReference("kafkaProperties", "kafkaProperties");
         if (topicSuffix != null) {
             builder.addPropertyValue("topicSuffix", topicSuffix);
             beanName = beanName + topicSuffix;

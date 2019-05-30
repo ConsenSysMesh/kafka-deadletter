@@ -35,4 +35,12 @@ public class KafkaProperties {
     public long getConsumerRetryInterval() {
         return Long.parseLong(environment.getProperty("kafka.consumer.retry.interval", DEFAULT_CONSUMER_RETRY_INTERVAL));
     }
+
+    public Integer getNumTopicPartitions() {
+        return Integer.parseInt(environment.getProperty("kafka.topic.numPartitions", "3"));
+    }
+
+    public Short getTopicReplicationFactor() {
+        return Short.parseShort(environment.getProperty("kafka.topic.replicationFactor", "1"));
+    }
 }
